@@ -2,10 +2,10 @@ package main
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
 	"os"
 	"strconv"
-	"strings"
 )
 
 type Shape interface {
@@ -28,21 +28,44 @@ func (s Square) Area() float64 {
 	return s.r * s.r
 }
 
+// func main() {
+// 	sc := bufio.NewScanner(os.Stdin)
+// 	sc.Scan()
+// 	kind := sc.Text()
+// 	sc.Scan()
+// 	dim, _ := strconv.ParseFloat(sc.Text(), 64)
+// 	var s interface{ Area() float64 }
+// 	switch strings.ToLower(kind) {
+// 	case "circle":
+// 		s = Circle{dim}
+// 	case "square":
+// 		s = Square{dim}
+// 	}
+
+// 	if s != nil {
+// 		fmt.Printf("%.2f\n", s.Area())
+// 	}
+// }
+
 func main() {
 	sc := bufio.NewScanner(os.Stdin)
 	sc.Scan()
-	kind := sc.Text()
-	sc.Scan()
-	dim, _ := strconv.ParseFloat(sc.Text(), 64)
-	var s interface{ Area() float64 }
-	switch strings.ToLower(kind) {
-	case "circle":
-		s = Circle{dim}
-	case "square":
-		s = Square{dim}
+	age, err := validateAge(sc.Text())
+	if err != nil {
+		fmt.Printf("error: %s\n", err.Error())
+	} else {
+		fmt.Printf("age: %d\n", age)
 	}
+}
 
-	if s != nil {
-		fmt.Printf("%.2f\n", s.Area())
+func validateAge(s string) (int, error) {
+	age, err := strconv.Atoi(s)
+	if err != nil {
+		err = fmt.Errorf("parse: %w", err)
+		return age, err
 	}
+	if age < 0 {
+		return age, errors.New("negative")
+	}
+	return age, nil
 }
