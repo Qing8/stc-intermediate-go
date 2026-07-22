@@ -31,7 +31,10 @@ func main() {
 	var mu sync.Mutex
 	for i := 0; i < numGroups; i++ {
 		var curBatch []int
-		start, end := i*4, min((i+1)*4, length)
+		start, end := i*4, (i+1)*4
+		if end > length {
+			end = length
+		}
 		for j := start; j < end; j++ {
 			curBatch = append(curBatch, nums[j])
 		}
