@@ -2,70 +2,52 @@ package main
 
 import (
 	"bufio"
-	"errors"
 	"fmt"
 	"os"
 	"strconv"
+	"strings"
+	"sync"
 )
-
-type Shape interface {
-	Area() float64
-}
-
-type Circle struct {
-	r float64
-}
-
-func (c Circle) Area() float64 {
-	return 3.14 * c.r * c.r
-}
-
-type Square struct {
-	r float64
-}
-
-func (s Square) Area() float64 {
-	return s.r * s.r
-}
-
-// func main() {
-// 	sc := bufio.NewScanner(os.Stdin)
-// 	sc.Scan()
-// 	kind := sc.Text()
-// 	sc.Scan()
-// 	dim, _ := strconv.ParseFloat(sc.Text(), 64)
-// 	var s interface{ Area() float64 }
-// 	switch strings.ToLower(kind) {
-// 	case "circle":
-// 		s = Circle{dim}
-// 	case "square":
-// 		s = Square{dim}
-// 	}
-
-// 	if s != nil {
-// 		fmt.Printf("%.2f\n", s.Area())
-// 	}
-// }
 
 func main() {
 	sc := bufio.NewScanner(os.Stdin)
 	sc.Scan()
-	age, err := validateAge(sc.Text())
-	if err != nil {
-		fmt.Printf("error: %s\n", err.Error())
-	} else {
-		fmt.Printf("age: %d\n", age)
+	n, _ := strconv.Atoi(sc.Text())
+	sc.Scan()
+	fields := strings.Fields(sc.Text())
+	nums := make([]int, n)
+	for i, f := range fields {
+		val, err := strconv.Atoi(f)
+		nums[i] = val
+		if err != nil {
+			panic(err.Error())
+		}
 	}
-}
 
-func validateAge(s string) (int, error) {
-	age, err := strconv.Atoi(s)
-	if err != nil {
-		err = fmt.Errorf("parse: %w", err)
-		return age, err
+	length := len(nums)
+	numGroups := (length + 3) / 4 // Get the ceiling of integer division
+	var total int
+	var wg sync.WaitGroup
+	var mu sync.Mutex
+	for i := range numGroups {
+		var curBatch []int
+		start, end := i*4, min((i+1)*4, length)
+		for j := start; j < end; j++ {
+			curBatch = append(curBatch, nums[j])
+		}
+		wg.Add(1)
+		go func(total *int, curBatch []int) {
+			defer wg.Done()
+			curBatchTotal := 0
+			for l := range len(curBatch) {
+				curBatchTotal += curBatch[l]
+			}
+			mu.Lock()
+			*total += curBatchTotal
+			mu.Unlock()
+		}(&total, curBatch)
 	}
-	if age < 0 {
-		return age, errors.New("negative")
-	}
-	return age, nil
+	wg.Wait()
+
+	fmt.Println(total) // replace with the real total
 }
