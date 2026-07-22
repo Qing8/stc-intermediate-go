@@ -29,7 +29,7 @@ func main() {
 	var total int
 	var wg sync.WaitGroup
 	var mu sync.Mutex
-	for i := range numGroups {
+	for i := 0; i < numGroups; i++ {
 		var curBatch []int
 		start, end := i*4, min((i+1)*4, length)
 		for j := start; j < end; j++ {
@@ -39,7 +39,8 @@ func main() {
 		go func(total *int, curBatch []int) {
 			defer wg.Done()
 			curBatchTotal := 0
-			for l := range len(curBatch) {
+			for l := 0; l < len(curBatch); l++ {
+
 				curBatchTotal += curBatch[l]
 			}
 			mu.Lock()
