@@ -6,52 +6,33 @@ import (
 	"os"
 	"strconv"
 	"strings"
-	"sync"
 )
 
 func main() {
 	sc := bufio.NewScanner(os.Stdin)
 	sc.Scan()
-	n, _ := strconv.Atoi(sc.Text())
-	sc.Scan()
 	fields := strings.Fields(sc.Text())
-	nums := make([]int, n)
-	for i, f := range fields {
-		val, err := strconv.Atoi(f)
-		nums[i] = val
-		if err != nil {
-			panic(err.Error())
+	a := make(chan int)
+	b := make(chan int)
+	go func() {
+		defer close(b)
+		for n := range a {
+			// TODO: send the square of n into channel b
+			b <- n * n
 		}
+	}()
+	go func() {
+		defer close(a)
+		for _, f := range fields {
+			n, _ := strconv.Atoi(f)
+			// TODO: send n into channel a
+			a <- n
+		}
+	}()
+
+	sum := 0
+	for v := range b {
+		sum += v
 	}
-
-	length := len(nums)
-	numGroups := (length + 3) / 4 // Get the ceiling of integer division
-	var total int
-	var wg sync.WaitGroup
-	var mu sync.Mutex
-	for i := 0; i < numGroups; i++ {
-		var curBatch []int
-		start, end := i*4, (i+1)*4
-		if end > length {
-			end = length
-		}
-		for j := start; j < end; j++ {
-			curBatch = append(curBatch, nums[j])
-		}
-		wg.Add(1)
-		go func(total *int, curBatch []int) {
-			defer wg.Done()
-			curBatchTotal := 0
-			for l := 0; l < len(curBatch); l++ {
-
-				curBatchTotal += curBatch[l]
-			}
-			mu.Lock()
-			*total += curBatchTotal
-			mu.Unlock()
-		}(&total, curBatch)
-	}
-	wg.Wait()
-
-	fmt.Println(total) // replace with the real total
+	fmt.Println(sum)
 }
