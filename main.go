@@ -27,7 +27,10 @@ func main() {
 	partialSum := make(chan int, nGroup)
 	for i := 0; i < nGroup; i++ {
 
-		start, end := i*4, min((i+1)*4, len(nums))
+		start, end := i*4, (i+1)*4
+		if end > len(nums) {
+			end = len(nums)
+		}
 		wg.Add(1)
 		go sum(nums[start:end], partialSum, &wg)
 	}
