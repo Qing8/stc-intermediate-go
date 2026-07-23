@@ -34,8 +34,10 @@ func main() {
 		wg.Add(1)
 		go sum(nums[start:end], partialSum, &wg)
 	}
-	wg.Wait()
-	close(partialSum)
+	go func() {
+		wg.Wait()
+		close(partialSum)
+	}()
 
 	for v := range partialSum {
 		total += v
@@ -46,8 +48,8 @@ func main() {
 func sum(a []int, partialSum chan int, wg *sync.WaitGroup) {
 	defer wg.Done()
 	s := 0
-	for i := 0; i < len(a); i++ {
-		s += a[i]
+	for _, v := range a {
+		s += v
 	}
 	partialSum <- s
 }
