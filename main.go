@@ -1,29 +1,50 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
-	"time"
+	"os"
+	"strconv"
+	"sync"
 )
 
 func main() {
-	ch := make(chan string, 2)
-	go func() {
-		time.Sleep(30 * time.Millisecond)
-		ch <- "slow"
-	}()
-	go func() {
-		time.Sleep(10 * time.Millisecond)
-		ch <- "fast"
-	}()
-	// select to receive first, with 100ms timeout
-	for {
-		select {
-		case <-time.After(100 * time.Millisecond):
-			fmt.Println("timeout")
-			return
-		case c := <-ch:
-			fmt.Println(c)
-			return
-		}
+	sc := bufio.NewScanner(os.Stdin)
+	sc.Buffer(make([]byte, 1024*1024), 1024*1024)
+	sc.Scan()
+	n, _ := strconv.Atoi(sc.Text())
+	nums := make([]int, n)
+	for i := 0; i < n; i++ {
+		sc.Scan()
+		nums[i], _ = strconv.Atoi(sc.Text())
 	}
+
+	var wg sync.WaitGroup
+	total := 0
+
+	length := len(nums)
+	nGroup := (length + 3) / 4
+	partialSum := make(chan int, nGroup)
+	for i := 0; i < nGroup; i++ {
+
+		start, end := i*4, min((i+1)*4, len(nums))
+		wg.Add(1)
+		go sum(nums[start:end], partialSum, &wg)
+	}
+	wg.Wait()
+	close(partialSum)
+
+	for v := range partialSum {
+		total += v
+	}
+	fmt.Println(total)
+}
+
+func sum(a []int, partialSum chan int, wg *sync.WaitGroup) {
+	defer wg.Done()
+	s := 0
+	for i := 0; i < len(a); i++ {
+		s += a[i]
+	}
+	partialSum <- s
 }
