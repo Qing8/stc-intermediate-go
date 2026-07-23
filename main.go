@@ -20,11 +20,10 @@ func main() {
 		select {
 		case <-time.After(100 * time.Millisecond):
 			fmt.Println("timeout")
-			// return
+			return
 		case c := <-ch:
 			fmt.Println(c)
-			// return
+			return
 		}
-		return
 	}
 }
